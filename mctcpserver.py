@@ -4,6 +4,7 @@ import threading
 import selectors
 import types
 
+from protocolmsg import MessageDecoder
 
 class mctcpserver (threading.Thread):
     def __init__(self, address, port):
@@ -11,6 +12,7 @@ class mctcpserver (threading.Thread):
         self.address = address
         self.port = port
         self.sel = selectors.DefaultSelector()
+        self.decoder = MessageDecoder()
 
     def run2(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -28,7 +30,6 @@ class mctcpserver (threading.Thread):
 
     def run(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as lsock:
-            #lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             lsock.bind((self.address, self.port))
             lsock.listen()
             print('listening on', (self.address, self.port))
@@ -56,7 +57,8 @@ class mctcpserver (threading.Thread):
         if mask & selectors.EVENT_READ:
             recv_data = sock.recv(1024)  # Should be ready to read
             if recv_data:
-                data.outb += recv_data
+                #data.outb += recv_data
+                self.decoder.enqueue(data)
             else:
                 print('closing connection to', data.addr)
                 self.sel.unregister(sock)
