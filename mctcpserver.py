@@ -6,27 +6,30 @@ import types
 
 from protocolmsg import MessageDecoder
 
-class mctcpserver (threading.Thread):
-    def __init__(self, address, port):
-        self.bContinue = True
+
+class MCTcpServer(threading.Thread):
+    def __init__(self, address, port, topcb):
+        threading.Thread.__init__(self)
+        self.bContinue: bool = True
         self.address = address
         self.port = port
         self.sel = selectors.DefaultSelector()
-        self.decoder = MessageDecoder()
+        self.decoder = MessageDecoder(topcb)
+        self.topcb = topcb
 
-    def run2(self):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((self.address, self.port))
-            s.listen()
-            conn, addr = s.accept()
-            with conn:
-                print('Connected by', addr)
-                while True:
-                    data = conn.recv(1024)
-                    print('Received', repr(data))
-                    if not data:
-                        break
-                    conn.sendall(data)
+    # def run2(self):
+    #     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    #         s.bind((self.address, self.port))
+    #         s.listen()
+    #         conn, addr = s.accept()
+    #         with conn:
+    #             print('Connected by', addr)
+    #             while True:
+    #                 data = conn.recv(1024)
+    #                 print('Received', repr(data))
+    #                 if not data:
+    #                     break
+    #                 conn.sendall(data)
 
     def run(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as lsock:
@@ -43,7 +46,7 @@ class mctcpserver (threading.Thread):
                     else:
                         self.service_connection(key, mask)
 
-    def accept_wrapper(self,sock):
+    def accept_wrapper(self, sock):
         conn, addr = sock.accept()  # Should be ready to read
         print('accepted connection from', addr)
         conn.setblocking(False)
@@ -57,7 +60,7 @@ class mctcpserver (threading.Thread):
         if mask & selectors.EVENT_READ:
             recv_data = sock.recv(1024)  # Should be ready to read
             if recv_data:
-                #data.outb += recv_data
+                # data.outb += recv_data
                 self.decoder.enqueue(data)
             else:
                 print('closing connection to', data.addr)
