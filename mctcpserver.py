@@ -61,7 +61,8 @@ class MCTcpServer(threading.Thread):
             recv_data = sock.recv(1024)  # Should be ready to read
             if recv_data:
                 # data.outb += recv_data
-                self.decoder.enqueue(data)
+                print("Received: {}".format(repr(recv_data)))
+                self.decoder.enqueue(recv_data)
             else:
                 print('closing connection to', data.addr)
                 self.sel.unregister(sock)

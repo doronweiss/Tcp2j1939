@@ -17,6 +17,7 @@ class DecoderPhase(Enum):
 
 class MessageDecoder  (threading.Thread):
     def __init__(self, topcb):
+        threading.Thread.__init__(self)
         self.dataQueue = queue.Queue()
         self.mre = threading.Event()
         self.bcontinue = True
@@ -35,10 +36,9 @@ class MessageDecoder  (threading.Thread):
         self.mre.set()
 
     def dequeue (self):
-        data = self.dataQueue.get(False)  # doesn't block
-        if not data  is None:
-            return data
-        else:
+        try:
+            return self.dataQueue.get(False)  # doesn't block
+        except:
             return None
 
     def run(self):
@@ -46,33 +46,30 @@ class MessageDecoder  (threading.Thread):
             self.mre.wait(0.1)
             self.mre.clear()
             while True: # queue emptying loop
-                try:
-                    data = self.dataQueue.get(False)
+                data = self.dequeue()
+                if data is not None:
                     for b in data:
                         res = self.datadecoder(b)
                         if res is not None and self.topcb is not None:
                             self.topcb(data)
-                    pass
-                except:
+                else:
                     break
-
 
     def datadecoder (self,b) -> bytes:
         if self.decodPhase==DecoderPhase.wait:
-            if b==b'\xFF':
+            if b==255:
                 self.bytesFilled=0
                 self.decodPhase=DecoderPhase.wait2
             return None
         elif self.decodPhase==DecoderPhase.wait2:
-            if b==b'\xFF':
+            if b==255:
                 self.decodPhase=DecoderPhase.waitsz
             return None
         elif self.decodPhase==DecoderPhase.waitsz:
-            if b==b'\xFF':
-                self.messageSz = int (b)
-                self.dataidx = 0
-                self.messageData = []
-                self.decodPhase=DecoderPhase.data
+            self.messageSz = int (b)
+            self.dataidx = 0
+            self.messageData = []
+            self.decodPhase=DecoderPhase.data
             return None
         elif self.decodPhase==DecoderPhase.data:
             self.messageData.append(b)

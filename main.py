@@ -14,6 +14,7 @@ def enqueue(self, data):
 mre = threading.Event()
 dataQueue = queue.Queue()
 mts = MCTcpServer('127.0.0.1', 65432, enqueue)
+mts.decoder.start()
 mts.start()
 print ("After run")
 while True:
