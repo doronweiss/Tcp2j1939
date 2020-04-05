@@ -30,6 +30,7 @@ class MessageDecoder  (threading.Thread):
         self.dataidx=0
         self.crcAlg = crcengine.new('crc16-modbus')
         self.crc = 0
+        self.crcHi = self.cecLow = 0
 
     def enqueue (self, data):
         self.dataQueue.put(data)
@@ -78,12 +79,16 @@ class MessageDecoder  (threading.Thread):
                 self.decodPhase = DecoderPhase.crc1
             return None
         elif self.decodPhase==DecoderPhase.crc1:
-            self.crc = int(b) << 8
+            self.crc = int(b)
+            self.rcLow = b
             self.decodPhase = DecoderPhase.crc2
         elif self.decodPhase == DecoderPhase.crc2:
-            self.crc += int(b)
+            self.crc += int(b) * 256
+            self.crcHi = b
             self.decodPhase = DecoderPhase.wait
-            if self.crc == self.calcCrc(self.messageData):
+            calcedCrc = self.calcCrc(self.messageData)
+            print ("Msg cr = {}, calculated crc= {}".format(self.crc, calcedCrc))
+            if self.crc == calcedCrc:
                 return self.messageData
             else:
                 return None

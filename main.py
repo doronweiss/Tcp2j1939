@@ -6,7 +6,7 @@ import queue
 import time
 
 
-def enqueue(self, data):
+def enqueue(data):
     dataQueue.put(data)
     mre.set()
 

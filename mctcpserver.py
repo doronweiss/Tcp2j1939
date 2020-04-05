@@ -45,6 +45,7 @@ class MCTcpServer(threading.Thread):
                         self.accept_wrapper(key.fileobj)
                     else:
                         self.service_connection(key, mask)
+            self.decoder.bcontinue = False
 
     def accept_wrapper(self, sock):
         conn, addr = sock.accept()  # Should be ready to read
