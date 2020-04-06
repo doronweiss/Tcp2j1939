@@ -52,7 +52,7 @@ class MessageDecoder  (threading.Thread):
                     for b in data:
                         res = self.datadecoder(b)
                         if res is not None and self.topcb is not None:
-                            self.topcb(data)
+                            self.topcb(res)
                 else:
                     break
 
@@ -87,8 +87,9 @@ class MessageDecoder  (threading.Thread):
             self.crcHi = b
             self.decodPhase = DecoderPhase.wait
             calcedCrc = self.calcCrc(self.messageData)
-            print ("Msg cr = {}, calculated crc= {}".format(self.crc, calcedCrc))
+            #print ("Msg cr = {}, calculated crc= {}".format(self.crc, calcedCrc))
             if self.crc == calcedCrc:
+                #print ("got: {}".format(self.messageData[3:self.messageSz+3]))
                 return self.messageData
             else:
                 return None

@@ -22,7 +22,8 @@ while True:
     mre.clear()
     try:
         data = dataQueue.get(False)
-        print ("Resieved: {}".format(repr(data)))
+        #print ("Recieved: {}".format(data.decode("utf-8")))
+        print ("Recieved: {}".format(str(data, "utf-8")))
         time.sleep(0.1)
     except:
-        break
+        pass
